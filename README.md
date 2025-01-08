@@ -1,6 +1,7 @@
 # AirbnbAPI - Automação de Coleta de Reservas
 
-Este projeto permite automatizar a coleta de dados de reservas do Airbnb utilizando a API privada da plataforma. Ele fornece um script que autentica o usuário, recupera as reservas e gera um arquivo JSON contendo os dados formatados, além de um resumo estatístico.
+Este projeto permite automatizar a coleta de dados de reservas do Airbnb utilizando a API privada da plataforma.
+Ele fornece as informações de reservas e gera um arquivo JSON contendo os dados formatados, além de fornecer um resumo estatístico detalhado.
 ## Requisitos
 
 - **Python 3.8 ou superior**

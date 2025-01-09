@@ -97,41 +97,62 @@ class AirbnbAPI:
             logging.error(f"[ERRO] Falha ao processar reserva: {e}.")
             return {}
 
-    def calculate_summary(self, reservations: List[Dict]) -> Dict:
+    def calculate_summary(self, reservations: List[Dict], include_canceled: bool = False) -> Dict:
         """
         Calcula estatísticas e totais baseados nas reservas processadas.
 
         Args:
             reservations (List[Dict]): Lista de reservas processadas.
+            include_canceled (bool): Indica se as reservas canceladas devem ser incluídas no cálculo.
 
         Returns:
             Dict: Resumo das reservas.
         """
-        earnings_sum = sum(res.get("earnings", 0) for res in reservations)
-        nights_sum = sum(res.get("nights", 0) for res in reservations)
-        status_count = {}
-        property_count = {}
-        property_earnings = {}
+        if not include_canceled:
+            valid_reservations = [
+                res for res in reservations
+                if res.get("status") not in ["Cancelado pelo hóspede", "Cancelada pelo Airbnb"]
+            ]
+        else:
+            valid_reservations = reservations
 
+        status_count = {}
         for res in reservations:
             status = res.get("status", "unknown")
             status_count[status] = status_count.get(status, 0) + 1
 
+        if not valid_reservations:
+            logging.warning("[RESUMO] Nenhuma reserva válida encontrada.")
+            return {
+                "generated_at": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "reservations_sum": 0,
+                "earnings_sum": "R$0,00",
+                "nights_sum": 0,
+                "status_count": status_count,
+                "guest_details": {},
+                "reservations_per_property": {},
+                "earnings_per_property": {},
+            }
+
+        earnings_sum = sum(res.get("earnings", 0) for res in valid_reservations)
+        nights_sum = sum(res.get("nights", 0) for res in valid_reservations)
+        property_count = {}
+        property_earnings = {}
+
         guest_details = {
-            "adults_sum": sum(res["guest"]["details"].get("adults", 0) for res in reservations),
-            "children_sum": sum(res["guest"]["details"].get("children", 0) for res in reservations),
-            "infants_sum": sum(res["guest"]["details"].get("infants", 0) for res in reservations),
-            "pets_sum": sum(res["guest"]["details"].get("pets", 0) for res in reservations),
+            "adults_sum": sum(res["guest"]["details"].get("adults", 0) for res in valid_reservations),
+            "children_sum": sum(res["guest"]["details"].get("children", 0) for res in valid_reservations),
+            "infants_sum": sum(res["guest"]["details"].get("infants", 0) for res in valid_reservations),
+            "pets_sum": sum(res["guest"]["details"].get("pets", 0) for res in valid_reservations),
         }
 
-        for res in reservations:
+        for res in valid_reservations:
             property_name = res.get("property_name", "Unknown")
             property_count[property_name] = property_count.get(property_name, 0) + 1
             property_earnings[property_name] = property_earnings.get(property_name, 0) + res.get("earnings", 0)
 
-        reservations_sum = len(reservations)
+        reservations_sum = len(valid_reservations)
 
-        sorted_status_count = dict(sorted(status_count.items(), key=lambda item: item[1], reverse=True))
         sorted_property_count = {
             k: {
                 "count": v,
@@ -144,6 +165,7 @@ class AirbnbAPI:
             k: {
                 "earnings": f"R${v:,.2f}",
                 "percentage": f"{(v / earnings_sum) * 100:.2f}%",
+                "average_per_reservation": f"R${(v / property_count[k]):,.2f}" if property_count[k] > 0 else "R$0,00",
             }
             for k, v in sorted(property_earnings.items(), key=lambda item: item[1], reverse=True)
         }
@@ -153,7 +175,7 @@ class AirbnbAPI:
             "reservations_sum": reservations_sum,
             "earnings_sum": f"R${earnings_sum:,.2f}",
             "nights_sum": nights_sum,
-            "status_count": sorted_status_count,
+            "status_count": dict(sorted(status_count.items(), key=lambda item: item[1], reverse=True)),
             "guest_details": guest_details,
             "reservations_per_property": sorted_property_count,
             "earnings_per_property": sorted_property_earnings,

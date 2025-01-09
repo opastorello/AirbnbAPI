@@ -42,7 +42,7 @@ def save_to_file(output_file, content):
 if __name__ == "__main__":
     # Configuração do logging para rastreamento da execução
     logging.basicConfig(
-        filename="minhas-reservas.log",
+        filename="reservas.log",
         level=logging.INFO,
         format="%(asctime)s - [%(levelname)s] - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",

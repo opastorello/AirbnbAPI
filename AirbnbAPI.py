@@ -218,12 +218,17 @@ class AirbnbAPI:
         logging.info(f"[FINALIZADO] Total de reservas recuperadas: {len(all_reservations)}.")
         return all_reservations
 
-    def get_reservations_as_json(self, indent: int = 4) -> str:
+    def get_reservations_as_json(self, indent: int = 4, sort_by: str = None, sort_order: str = "asc", start_date: str = None, end_date: str = None, date_filter_field: str = "check_in") -> str:
         """
-        Recupera as reservas e as retorna no formato JSON com resumo.
+        Recupera as reservas e as retorna no formato JSON com resumo, filtradas e ordenadas conforme especificado.
 
         Args:
             indent (int): Espaçamento para a formatação do JSON.
+            sort_by (str): Campo pelo qual as reservas devem ser ordenadas.
+            sort_order (str): Ordem da ordenação ('asc' ou 'desc').
+            start_date (str): Data inicial do filtro no formato 'YYYY-MM-DD'.
+            end_date (str): Data final do filtro no formato 'YYYY-MM-DD'.
+            date_filter_field (str): Campo de data usado no filtro ('check_in', 'check_out', 'booking_date').
 
         Returns:
             str: Reservas formatadas como string JSON.
@@ -233,6 +238,39 @@ class AirbnbAPI:
         if not reservations:
             logging.warning("[RESULTADO] Nenhuma reserva encontrada.")
             return json.dumps({"message": "Nenhuma reserva encontrada."}, ensure_ascii=False, indent=indent)
+
+        valid_date_fields = ["check_in", "check_out", "booking_date"]
+        if date_filter_field not in valid_date_fields:
+            logging.error(f"[ERRO] Campo de filtro de data inválido: {date_filter_field}.")
+            return json.dumps({"message": f"Campo de filtro de data inválido: {date_filter_field}."}, ensure_ascii=False, indent=indent)
+
+        if start_date or end_date:
+            try:
+                start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d") if start_date else None
+                end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d") if end_date else None
+
+                def is_within_date_range(reservation):
+                    date_field_value = reservation.get(date_filter_field, "")
+                    if not date_field_value:
+                        return False
+                    reservation_date = datetime.datetime.strptime(date_field_value, "%Y-%m-%d")
+                    return ((not start_date or reservation_date >= start_date) and
+                            (not end_date or reservation_date <= end_date))
+
+                reservations = [res for res in reservations if is_within_date_range(res)]
+            except Exception as e:
+                logging.error(f"[ERRO] Falha ao filtrar por período de datas: {e}.")
+                return json.dumps({"message": "Erro ao filtrar por período de datas."}, ensure_ascii=False, indent=indent)
+
+        if sort_by:
+            try:
+                reservations.sort(
+                    key=lambda res: res.get(sort_by, ""),
+                    reverse=(sort_order.lower() == "desc")
+                )
+            except Exception as e:
+                logging.error(f"[ERRO] Falha ao ordenar reservas pelo campo '{sort_by}': {e}.")
+                return json.dumps({"message": f"Erro ao ordenar pelo campo '{sort_by}'."}, ensure_ascii=False, indent=indent)
 
         summary = self.calculate_summary(reservations)
         data_completa = {

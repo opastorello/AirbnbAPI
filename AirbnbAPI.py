@@ -218,7 +218,16 @@ class AirbnbAPI:
         logging.info(f"[FINALIZADO] Total de reservas recuperadas: {len(all_reservations)}.")
         return all_reservations
 
-    def get_reservations_as_json(self, indent: int = 4, sort_by: str = None, sort_order: str = "asc", start_date: str = None, end_date: str = None, date_filter_field: str = "check_in") -> str:
+    def get_reservations_as_json(
+        self, 
+        indent: int = 4, 
+        sort_by: str = None, 
+        sort_order: str = "asc", 
+        start_date: str = None, 
+        end_date: str = None, 
+        date_filter_field: str = "check_in", 
+        status_filter: List[str] = None
+    ) -> str:
         """
         Recupera as reservas e as retorna no formato JSON com resumo, filtradas e ordenadas conforme especificado.
 
@@ -229,6 +238,7 @@ class AirbnbAPI:
             start_date (str): Data inicial do filtro no formato 'YYYY-MM-DD'.
             end_date (str): Data final do filtro no formato 'YYYY-MM-DD'.
             date_filter_field (str): Campo de data usado no filtro ('check_in', 'check_out', 'booking_date').
+            status_filter (List[str]): Lista de status permitidos para as reservas.
 
         Returns:
             str: Reservas formatadas como string JSON.
@@ -261,6 +271,9 @@ class AirbnbAPI:
             except Exception as e:
                 logging.error(f"[ERRO] Falha ao filtrar por período de datas: {e}.")
                 return json.dumps({"message": "Erro ao filtrar por período de datas."}, ensure_ascii=False, indent=indent)
+
+        if status_filter:
+            reservations = [res for res in reservations if res.get("status") in status_filter]
 
         if sort_by:
             try:

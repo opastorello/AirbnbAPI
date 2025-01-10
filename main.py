@@ -61,15 +61,14 @@ if __name__ == "__main__":
         airbnb_api = AirbnbAPI(API_KEY, COOKIE)
 
         # Recuperar as reservas no formato JSON com os seguintes filtros:
-        # - Ordenar pelo campo "check_out" em ordem crescente.
-        # - Filtrar reservas cujo "check_out" esteja entre "2024-01-01" e "2024-12-31".
-        # - Utilizar "check_out" como campo base para filtragem de período.
         reservas_json = airbnb_api.get_reservations_as_json(
-            sort_by="check_out",         # Campo utilizado para ordenação.
-            sort_order="asc",            # Ordem crescente.
-            start_date="2024-01-01",     # Data inicial do filtro.
-            end_date="2024-12-31",       # Data final do filtro.
-            date_filter_field="check_out"  # Campo de data utilizado para filtragem.
+            sort_by="check_out",         # Campo utilizado para ordenação. Aqui, as reservas serão ordenadas com base no campo "check_out".
+            sort_order="asc",            # Ordem crescente. O menor valor de "check_out" aparecerá primeiro.
+            start_date="2024-01-01",     # Data inicial do filtro. Somente reservas com "check_out" a partir de 1º de janeiro de 2024 serão incluídas.
+            end_date="2024-12-31",       # Data final do filtro. Somente reservas com "check_out" até 31 de dezembro de 2024 serão incluídas.
+            date_filter_field="check_out",  # Campo de data utilizado para filtragem. O "check_out" será usado como referência para aplicar os filtros de data.
+            status_filter=["Hóspede anterior", "Aguardando avaliação do hóspede"] 
+            # Filtro de status. Somente reservas com o status "Hóspede anterior" ou "Aguardando avaliação do hóspede" serão incluídas.
         )
 
         # Definir o nome do arquivo de saída

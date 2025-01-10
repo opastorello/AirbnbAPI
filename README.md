@@ -129,7 +129,6 @@ Contribuições são bem-vindas! Se você encontrar bugs ou tiver ideias para me
 
 ## Próximos Passos
 
-- **Implementação de Filtros:** Adicionar suporte para filtrar reservas por data ou status diretamente no script.
 - **Relatórios Adicionais:** Expandir os relatórios gerados com gráficos e tabelas.
 - **Melhoria na Documentação:** Adicionar imagens e exemplos de uso mais avançados.
 - **Captura de Cookie e Token API:** Adicionar como recuperar os dados de uma sessão.

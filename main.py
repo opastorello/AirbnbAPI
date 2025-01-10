@@ -57,9 +57,20 @@ if __name__ == "__main__":
         # Carregar as variáveis de ambiente necessárias
         API_KEY, COOKIE = load_env_variables()
 
-        # Instanciar a classe AirbnbAPI e recuperar reservas no formato JSON
+        # Instanciar a classe AirbnbAPI com a chave de API e o cookie carregados das variáveis de ambiente.
         airbnb_api = AirbnbAPI(API_KEY, COOKIE)
-        reservas_json = airbnb_api.get_reservations_as_json()
+
+        # Recuperar as reservas no formato JSON com os seguintes filtros:
+        # - Ordenar pelo campo "check_out" em ordem crescente.
+        # - Filtrar reservas cujo "check_out" esteja entre "2024-01-01" e "2024-12-31".
+        # - Utilizar "check_out" como campo base para filtragem de período.
+        reservas_json = airbnb_api.get_reservations_as_json(
+            sort_by="check_out",         # Campo utilizado para ordenação.
+            sort_order="asc",            # Ordem crescente.
+            start_date="2024-01-01",     # Data inicial do filtro.
+            end_date="2024-12-31",       # Data final do filtro.
+            date_filter_field="check_out"  # Campo de data utilizado para filtragem.
+        )
 
         # Definir o nome do arquivo de saída
         output_file = "reservas.json"

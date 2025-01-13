@@ -66,6 +66,7 @@ Ele fornece as informações de reservas e gera um arquivo JSON contendo os dado
    - Carrega as variáveis de ambiente do arquivo `.env`.
    - Autentica na API Airbnb.
    - Recupera as reservas e as salva no arquivo `reservas.json`.
+   - Recupera as reservas e as salva no arquivo `reservas.ics`.
    - Gera logs detalhados da execução no arquivo `reservas.log`.
 
 2. **Verifique o arquivo gerado:**

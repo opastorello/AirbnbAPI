@@ -57,7 +57,7 @@ if __name__ == "__main__":
         # Carregar as variáveis de ambiente necessárias
         API_KEY, COOKIE = load_env_variables()
 
-        # Instanciar a classe AirbnbAPI com a chave de API e o cookie carregados das variáveis de ambiente.
+        # Instanciar a classe AirbnbAPI com a chave de API e o cookie carregados das variáveis de ambiente
         airbnb_api = AirbnbAPI(API_KEY, COOKIE)
 
         # Recuperar as reservas no formato JSON com os seguintes filtros:
@@ -71,12 +71,17 @@ if __name__ == "__main__":
             # Filtro de status. Somente reservas com o status "Hóspede anterior" ou "Aguardando avaliação do hóspede" serão incluídas.
         )
 
-        # Definir o nome do arquivo de saída
-        output_file = "reservas.json"
+        # Gerar arquivo ICS a partir do JSON de reservas
+        reservas_ics = airbnb_api.generate_ics(reservas_json)
 
-        # Salvar as reservas no arquivo
-        save_to_file(output_file, reservas_json)
+        # Definir nomes dos arquivos de saída
+        output_file_json = "reservas.json"
+        output_file_ics = "reservas.ics"
 
+        # Salvar os dados em arquivos
+        save_to_file(output_file_json, reservas_json)  # Salvar reservas em formato JSON
+        save_to_file(output_file_ics, reservas_ics)    # Salvar reservas em formato ICS
+        
         # Calcular e registrar a duração total da execução
         total_duration = time.time() - total_start_time
         logging.info(f"[EXECUÇÃO COMPLETA] Tempo total de execução: {total_duration:.4f} segundos.")

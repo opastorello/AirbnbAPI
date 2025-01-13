@@ -1,3 +1,4 @@
+import pytz
 import requests
 import datetime
 import json
@@ -292,3 +293,90 @@ class AirbnbAPI:
         }
 
         return json.dumps(data_completa, ensure_ascii=False, indent=indent)
+    
+    def generate_ics(self, reservations_json: str, indent: int = 4) -> str:
+        """
+        Gera um arquivo no formato .ics a partir de um JSON contendo reservas.
+
+        Args:
+            reservations_json (str): String JSON contendo as reservas.
+            indent (int): Espaçamento para a formatação do JSON retornado em caso de erro ou ausência de eventos.
+
+        Returns:
+            str: Conteúdo do arquivo .ics ou mensagem em JSON indicando problemas encontrados.
+        """
+        ical_content = "BEGIN:VCALENDAR\nVERSION:2.0\nCALSCALE:GREGORIAN\n"
+
+        try:
+            data = json.loads(reservations_json)
+            reservations = data.get("reservations", [])
+        except json.JSONDecodeError as e:
+            logging.error(f"[ERRO] Falha ao decodificar o JSON: {e}")
+            return json.dumps({"message": "Erro ao processar o JSON de reservas."}, ensure_ascii=False, indent=indent)
+
+        if not reservations:
+            logging.warning("[RESULTADO] Nenhuma reserva encontrada.")
+            return json.dumps({"message": "Nenhuma reserva encontrada."}, ensure_ascii=False, indent=indent)
+
+        added_events = 0
+
+        for res in reservations:
+            try:
+                status = res.get("status", "Status desconhecido")
+                confirmation_code = res.get("confirmation_code", "Código não informado")
+                property_name = res.get("property_name", "Propriedade")
+                check_in = res.get("check_in", "")
+                check_out = res.get("check_out", "")
+                guest = res.get("guest", {})
+                guest_name = guest.get("name", "Nome não informado")
+                guest_phone = guest.get("phone", "Telefone não informado")
+                guest_location = guest.get("location", "Localização desconhecida")
+                details = guest.get("details", {})
+                num_adults = details.get("adults", 0)
+                num_children = details.get("children", 0)
+                num_infants = details.get("infants", 0)
+                num_pets = details.get("pets", 0)
+
+                if not check_in or not check_out:
+                    logging.warning(f"[AVISO] Reserva ignorada: falta de datas em {confirmation_code}")
+                    continue
+
+                check_in_dt = datetime.datetime.strptime(check_in, "%Y-%m-%d").replace(hour=14, minute=0, second=0)
+                check_out_dt = datetime.datetime.strptime(check_out, "%Y-%m-%d").replace(hour=11, minute=0, second=0)
+
+                additional_info = (
+                    f"Status: {status}\n"
+                    f"Adultos: {num_adults}\n"
+                    f"Crianças: {num_children}\n"
+                    f"Bebês: {num_infants}\n"
+                    f"Pets: {num_pets}\n"
+                    f"Hóspede: {guest_name} ({guest_location})\n"
+                    f"Contato: {guest_phone}\n"
+                )
+
+                ical_content += (
+                    "BEGIN:VEVENT\n"
+                    f"SUMMARY:Reserva em {property_name}\n"
+                    f"DTSTART:{check_in_dt.strftime('%Y%m%dT%H%M%SZ')}\n"
+                    f"DTEND:{check_out_dt.strftime('%Y%m%dT%H%M%SZ')}\n"
+                    f"DESCRIPTION:Reserva para a propriedade {property_name}.\n"
+                    f"Check-in: {check_in}, Check-out: {check_out}\n"
+                    f"{additional_info}"
+                    f"LOCATION:{property_name}\n"
+                    "END:VEVENT\n"
+                )
+
+                added_events += 1
+
+            except Exception as e:
+                logging.error(
+                    f"[ERRO] Falha ao processar reserva {res.get('confirmation_code', 'desconhecido')}: {e}"
+                )
+
+        ical_content += "END:VCALENDAR\n"
+
+        if added_events == 0:
+            logging.warning("[RESULTADO] Nenhum evento foi adicionado ao calendário.")
+            return json.dumps({"message": "Nenhum evento válido foi encontrado nas reservas."}, ensure_ascii=False, indent=indent)
+
+        return ical_content

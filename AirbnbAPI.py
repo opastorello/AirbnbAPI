@@ -343,14 +343,22 @@ class AirbnbAPI:
                 check_in_dt = datetime.datetime.strptime(check_in, "%Y-%m-%d").replace(hour=14, minute=0, second=0)
                 check_out_dt = datetime.datetime.strptime(check_out, "%Y-%m-%d").replace(hour=11, minute=0, second=0)
 
+                check_in_formatted = check_in_dt.strftime("%d/%m/%Y")
+                check_out_formatted = check_out_dt.strftime("%d/%m/%Y")
+
                 additional_info = (
-                    f"Status: {status}\n"
-                    f"Adultos: {num_adults}\n"
-                    f"Crianças: {num_children}\n"
-                    f"Bebês: {num_infants}\n"
-                    f"Pets: {num_pets}\n"
-                    f"Hóspede: {guest_name} ({guest_location})\n"
-                    f"Contato: {guest_phone}\n"
+                    f"Hóspede: {guest_name} ({guest_location})\\n"
+                    f"Contato: {guest_phone}\\n"
+                    f"Status: {status}\\n"
+                    f"Adultos: {num_adults}\\n"
+                    f"Crianças: {num_children}\\n"
+                    f"Bebês: {num_infants}\\n"
+                    f"Pets: {num_pets}\\n"
+                )
+
+                description = (
+                    f"Check-in: {check_in_formatted}, Check-out: {check_out_formatted}.\\n"
+                    f"{additional_info}"
                 )
 
                 ical_content += (
@@ -358,9 +366,7 @@ class AirbnbAPI:
                     f"SUMMARY:Reserva em {property_name}\n"
                     f"DTSTART:{check_in_dt.strftime('%Y%m%dT%H%M%SZ')}\n"
                     f"DTEND:{check_out_dt.strftime('%Y%m%dT%H%M%SZ')}\n"
-                    f"DESCRIPTION:Reserva para a propriedade {property_name}.\n"
-                    f"Check-in: {check_in}, Check-out: {check_out}\n"
-                    f"{additional_info}"
+                    f"DESCRIPTION:{description}\n"
                     f"LOCATION:{property_name}\n"
                     "END:VEVENT\n"
                 )

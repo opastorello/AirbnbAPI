@@ -1,4 +1,3 @@
-import pytz
 import requests
 import datetime
 import json
